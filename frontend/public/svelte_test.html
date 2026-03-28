@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Svelte Preview Test</title>
+  <style>*{box-sizing:border-box}body{margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif}#root,#app{width:100%;min-height:100vh}</style>
+  <script src="https://cdn.jsdelivr.net/npm/svelte@3.59.2/compiler.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="debug" style="position:fixed;bottom:0;left:0;right:0;background:#111;color:#0f0;font-family:monospace;font-size:12px;padding:10px;max-height:40vh;overflow:auto;z-index:9999"></div>
+  <script type="module">
+    const dbg = document.getElementById('debug');
+    function log(msg) { dbg.innerHTML += msg + '<br>'; console.log(msg); }
+
+    log('1. Starting Svelte preview test...');
+    log('2. window.svelte exists: ' + !!window.svelte);
+
+    if (!window.svelte) {
+      log('ERROR: Svelte compiler not loaded');
+    } else {
+      const { compile } = window.svelte;
+      log('3. compile function: ' + typeof compile);
+
+      // Simple test first
+      try {
+        const simpleCode = '<h1>Hello Svelte!</h1><style>h1{color:blue}</style>';
+        const result = compile(simpleCode, { generate: 'dom', format: 'esm', name: 'Simple', dev: false });
+        log('4. Simple compile succeeded. Code length: ' + result.js.code.length);
+      } catch(e) {
+        log('4. Simple compile FAILED: ' + e.message);
+      }
+
+      // Test with component that has script
+      try {
+        const withScript = '<script>\nlet title = "Hello";\n<\/script>\n<h1>{title}</h1>\n<style>h1{color:blue}</style>';
+        const result = compile(withScript, { generate: 'dom', format: 'esm', name: 'WithScript', dev: false });
+        log('5. Script compile succeeded. Code length: ' + result.js.code.length);
+
+        // Check what imports the compiled code has
+        const imports = result.js.code.match(/from\s+['"][^'"]+['"]/g) || [];
+        log('6. Compiled imports: ' + JSON.stringify(imports));
+      } catch(e) {
+        log('5. Script compile FAILED: ' + e.message);
+      }
+
+      // Test the strip function
+      const q = String.fromCharCode(39);
+      const d = String.fromCharCode(34);
+      const a = 'from ' + q + 'svelte';
+      const b = 'from ' + d + 'svelte';
+      function strip(s) {
+        return s.split(String.fromCharCode(10)).filter(function(l) {
+          var t = l.trim();
+          return !(t.indexOf('import') !== -1 && (t.indexOf(a) !== -1 || t.indexOf(b) !== -1));
+        }).join(String.fromCharCode(10));
+      }
+
+      log('7. Testing strip function...');
+      const testImports = [
+        "import Header from './Header.svelte';",
+        "import { onMount } from 'svelte';",
+        "import { writable } from 'svelte/store';",
+        "let x = 5;"
+      ];
+      testImports.forEach(line => {
+        const kept = strip(line).trim().length > 0;
+        log('   ' + (kept ? 'KEPT' : 'REMOVED') + ': ' + line);
+      });
+
+      // Now test the full pipeline with real code
+      log('8. Testing full pipeline...');
+      const B = 'https://esm.sh/svelte@3.59.2';
+      function patch(c) {
+        c = c.split("from 'svelte'").join("from '" + B + "'");
+        c = c.split('from "svelte"').join('from "' + B + '"');
+        ['internal','store','transition','animate','easing','motion'].forEach(m => {
+          c = c.split("from 'svelte/" + m + "'").join("from '" + B + "/" + m + "'");
+          c = c.split('from "svelte/' + m + '"').join('from "' + B + '/' + m + '"');
+        });
+        return c;
+      }
+
+      // Test compile a simple component
+      try {
+        const headerSrc = '<script>\nlet title = "Hello World";\n<\/script>\n<h1>{title}</h1>\n<style>h1{color:#6C63FF;}</style>';
+        const headerResult = compile(strip(headerSrc), { generate: 'dom', format: 'esm', name: 'Header', dev: false });
+        const patchedCode = patch(headerResult.js.code);
+        log('9. Header compile + patch succeeded');
+        log('   Patched imports: ' + JSON.stringify(patchedCode.match(/from\s+['"][^'"]+['"]/g) || []));
+
+        // Try creating a blob URL and importing it
+        const blobUrl = URL.createObjectURL(new Blob([patchedCode], { type: 'text/javascript' }));
+        log('10. Blob URL created: ' + blobUrl.substring(0, 30) + '...');
+
+        const mod = await import(blobUrl);
+        log('11. Module imported! default export: ' + typeof mod.default);
+
+        const app = new mod.default({ target: document.getElementById('app'), props: {} });
+        log('12. Component mounted! SUCCESS!');
+      } catch(e) {
+        log('ERROR at step 9-12: ' + e.message);
+        log('Stack: ' + e.stack);
+      }
+    }
+  </script>
+</body>
+</html>

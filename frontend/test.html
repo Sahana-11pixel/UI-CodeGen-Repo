@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html><head></head><body>
+  <div id="app"></div>
+  <script src="https://cdn.jsdelivr.net/npm/svelte@3.59.2/compiler.js"></script>
+  <script type="module">
+(async()=>{
+if(!window.svelte){document.getElementById("app").innerHTML="<div style=\"padding:16px;color:#c00;font-family:monospace\"><b>Svelte Error:</b> Compiler not loaded.</div>";return;}
+const appEl=document.getElementById("app");
+const showErr=(msg)=>{appEl.innerHTML="<div style=\"padding:16px;color:#c00;background:#fee;border:1px solid #fcc;margin:12px;border-radius:6px;font-family:monospace\"><b>Svelte Error:</b><br>"+msg+"</div>";};
+try{
+const files={"App.svelte":"<script>let a=1;<\/script><h1>Hello</h1>"};
+const mainFilename="App.svelte";
+const subs=[];
+const{compile}=window.svelte;
+const B="https://esm.sh/svelte@3.59.2";
+function patch(c){
+  c=c.split("from 'svelte'").join("from '"+B+"'");
+  return c;
+}
+function strip(s){return s;}
+const SVELTE_SHIMS=`
+const createEventDispatcher=()=>(()=>{});
+`;
+function toBlob(src,name){
+  const{js,css}=compile(strip(src),{generate:"dom",format:"esm",name,dev:false});
+  return URL.createObjectURL(new Blob([SVELTE_SHIMS+"\n"+patch(js.code)],{type:"text/javascript"}));
+}
+const{js,css}=compile(strip(files[mainFilename]||""),{generate:"dom",format:"esm",name:"App",dev:false});
+let code=SVELTE_SHIMS+"\n"+patch(js.code);
+const url=URL.createObjectURL(new Blob([code],{type:"text/javascript"}));
+const{default:App}=await import(url);
+new App({target:appEl,props:{}});
+}catch(e){showErr(e.name+": "+e.message);}
+})();
+</script>
+</body></html>
