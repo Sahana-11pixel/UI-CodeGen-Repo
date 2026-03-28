@@ -3,7 +3,6 @@
 # IDE and editors
 .idea/
 .vscode/
-.emergent/
 
 # Dependencies
 node_modules/
@@ -101,5 +100,3 @@ backend/firebase-service-account.json
 !*.env.example
 
 
-.emergent/
-emergent/
