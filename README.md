@@ -4,6 +4,12 @@ A full-stack web application that lets users write, run, and get AI feedback on 
 
 ---
 
+## 🎥 Demo
+
+Check out the demo video: https://youtu.be/wM4yooaUI7I?si=0-_KWzo1Cx39lSKU
+
+---
+
 ## 🚀 Features
 
 - **Live Code Editor** — Monaco Editor with syntax highlighting and theme toggle (light/dark)
