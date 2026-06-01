@@ -2,20 +2,20 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+We only provide security updates for the latest code on the `main` branch.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+| Version | Supported |
+|--------|----------|
+| main branch (latest) | ✅ |
+| older commits | ❌ |
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+Please do NOT report security vulnerabilities through public GitHub issues.
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+Instead, report them privately via email:
+
+📧 uicodegensupport@gmail.com 
+
+We aim to acknowledge reports within 48 hours and will provide updates during investigation.  
+If confirmed, we will release a fix as soon as possible.
